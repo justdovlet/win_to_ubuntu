@@ -1,0 +1,63 @@
+
+
+
+sudo su
+3141
+apt install curl
+sudo curl -sL https://repos.influxdata.com/influxdb.key | sudo apt-key add -
+source /etc/lsb-release
+echo "deb https://repos.influxdata.com/${DISTRIB_ID,,} ${DISTRIB_CODENAME} stable" | sudo tee /etc/apt/sources.list.d/influxdb.list
+sudo systemctl start influxdb
+sudo systemctl enable influxdb
+netstat -plntu
+influx
+create database telegraf
+create user telegraf with password 'hakase-ndlr'
+show databases
+show users
+
+
+--------------
+
+sudo apt install telegraf -y
+sudo systemctl start telegraf
+sudo systemctl enable telegraf
+sudo systemctl status telegraf
+cd /etc/telegraf/
+mv telegraf.conf telegraf.conf.default
+vim telegraf.conf
+# Global Agent Configuration
+[agent]
+  hostname = "hakase-tig"
+  flush_interval = "15s"
+  interval = "15s"
+
+
+# Input Plugins
+[[inputs.cpu]]
+    percpu = true
+    totalcpu = true
+    collect_cpu_time = false
+    report_active = false
+[[inputs.disk]]
+    ignore_fs = ["tmpfs", "devtmpfs", "devfs"]
+[[inputs.io]]
+[[inputs.mem]]
+[[inputs.net]]
+[[inputs.system]]
+[[inputs.swap]]
+[[inputs.netstat]]
+[[inputs.processes]]
+[[inputs.kernel]]
+
+# Output Plugin InfluxDB
+[[outputs.influxdb]]
+  database = "telegraf"
+  urls = [ "http://127.0.0.1:8086" ]
+  username = "telegraf"
+  password = "hakase-ndlr"
+:wq
+sudo systemctl restart telegraf
+sudo telegraf -test -config /etc/telegraf/telegraf.conf --input-filter cpu
+sudo telegraf -test -config /etc/telegraf/telegraf.conf --input-filter net
+sudo telegraf -test -config /etc/telegraf/telegraf.conf --input-filter mem
